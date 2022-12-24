@@ -1,0 +1,93 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model RootUser{
+  id String @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+
+  username String @unique()
+  password String
+
+  restaurant Restaurant[]
+
+  @@map("root-users")
+}
+
+model Restaurant{
+  id String @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+  name String
+  address String
+  staffs Staff[]
+
+  rootUserId String
+  rootUser RootUser @relation(fields: [rootUserId], references: [id])
+
+  @@map("restaurants")
+}
+
+model Staff{
+  id String @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+  name String
+  position StaffPosition @default(STAFF)
+  username String @unique()
+  password String
+  tokenVersion Int @default(0)
+
+  restaurantId String
+  restaurant Restaurant @relation(fields: [restaurantId], references: [id])
+
+  orders Order[]
+
+  @@map("staffs")
+}
+
+enum StaffPosition{
+  MANAGER
+  STAFF
+}
+
+model Order{
+  id Int @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+  status OrderStatus @default(IN_QUEUE)
+
+  staffId String
+  staff Staff @relation(fields: [staffId], references: [id])
+
+  orderDetails OrderDetail[]
+
+   @@map("orders")
+}
+
+enum OrderStatus {
+  IN_QUEUE
+  COMPLETED
+  REVOKED
+  DELETED
+}
+
+model OrderDetail{
+  id Int @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt()
+
+  orderId Int
+  order Order @relation(fields: [orderId], references: [id])
+
+   @@map("order-details")
+}
